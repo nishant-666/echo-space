@@ -1,3 +1,4 @@
+import PhoneInput from "@/components/PhoneInput";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -5,7 +6,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,6 +13,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const [selectedTab, setSelectedTab] = useState<"Phone" | "Email" | "Social">(
@@ -82,14 +83,9 @@ export default function LoginScreen() {
                   <Text style={styles.fieldLabel}>Phone number</Text>
                   <View style={styles.phoneInputRow}>
                     {/* Country Selector */}
-                    <TouchableOpacity
-                      style={styles.countryPicker}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.flag}>🇮🇩</Text>
-                      <Text style={styles.countryCodeText}>{countryCode}</Text>
-                      <Ionicons name="chevron-down" size={14} color="#1A1A1A" />
-                    </TouchableOpacity>
+                    <View style={styles.phoneInputRow}>
+                      <PhoneInput />
+                    </View>
 
                     {/* Phone Number Input */}
                     <View style={styles.numberInputContainer}>
@@ -99,6 +95,7 @@ export default function LoginScreen() {
                         placeholderTextColor="#C4C4C6"
                         keyboardType="phone-pad"
                         value={phoneNumber}
+                        maxLength={10}
                         onChangeText={setPhoneNumber}
                       />
                     </View>
@@ -170,7 +167,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 60,
+    marginTop: 10,
   },
   circleButton: {
     width: 44,
@@ -242,6 +239,7 @@ const styles = StyleSheet.create({
   phoneInputRow: {
     flexDirection: "row",
     gap: 10,
+    // marginTop: 3,
   },
   countryPicker: {
     flexDirection: "row",

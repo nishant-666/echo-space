@@ -1,63 +1,74 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
-
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+import { Text, View } from "@/components/Themed";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Feather from "@expo/vector-icons/Feather";
+import { Tabs, useRouter } from "expo-router";
+import { SymbolView } from "expo-symbols";
+import { StyleSheet, TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const router = useRouter();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        headerShown: false,
+        tabBarActiveTintColor: "#212121",
+        tabBarInactiveTintColor: "#8e8e93",
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopColor: "#e5e5ea",
+          height: 100,
+          margin: 5,
+        },
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="chats"
         options={{
-          title: 'Tab One',
+          title: "Chats",
+          tabBarIconStyle: {
+            marginTop: 10,
+          },
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
+            <Feather name="home" size={24} color={color} tintColor={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="contacts"
         options={{
-          title: 'Tab Two',
+          title: "Contacts",
+          tabBarButton: () => (
+            <TouchableOpacity
+              style={styles.centerButtonContainer}
+              activeOpacity={0.8}
+              onPress={() => {
+                // Navigate to your new chat / compose screen
+                router.push("/contacts");
+              }}
+            >
+              <View style={styles.centerButton}>
+                <AntDesign name="plus" size={18} color="#fff" />
+                <Text style={styles.buttonText}>New Chat</Text>
+              </View>
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIconStyle: {
+            marginTop: 10,
+          },
           tabBarIcon: ({ color }) => (
             <SymbolView
               name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
+                ios: "car.side.rear.crop.trunk.partition.fill",
+                android: "settings",
+                web: "settings",
               }}
               tintColor={color}
               size={28}
@@ -68,3 +79,32 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  centerButtonContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  centerButton: {
+    width: 140,
+    height: 40,
+    borderRadius: 29,
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20, // Pops the button up above the tab bar frame
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    flexDirection: "row",
+    gap: 8,
+    elevation: 8, // Adds shadow depth on Android
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+});

@@ -96,7 +96,7 @@ export default function LoginScreen() {
           {/* Top Bar Navigation */}
           <View style={styles.header}>
             <TouchableOpacity
-              onPress={() => router.push("/auth/(tabs)/landing")}
+              onPress={() => router.push("/(auth)/landing")}
               style={styles.circleButton}
               activeOpacity={0.7}
             >

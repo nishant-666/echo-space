@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { COUNTRIES } from "../assets/json/countryCodes";
 
-export default function PhoneInput() {
+export default function PhoneInput({ onSelect }: any) {
   const [selectedCountry, setSelectedCountry] = useState(COUNTRIES[0]);
   const [visible, setVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,6 +71,7 @@ export default function PhoneInput() {
                   style={styles.countryItem}
                   onPress={() => {
                     setSelectedCountry(item);
+                    onSelect(item);
                     setVisible(false);
                     setSearchQuery("");
                   }}

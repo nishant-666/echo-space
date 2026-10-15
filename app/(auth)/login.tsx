@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
@@ -19,9 +20,33 @@ export default function LoginScreen() {
   const [selectedTab, setSelectedTab] = useState<"Phone" | "Email" | "Social">(
     "Phone",
   );
-  const [countryCode, setCountryCode] = useState("+62");
+  const [countryCode, setCountryCode] = useState({ dial_code: "" });
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [step, setStep] = useState(1);
+  const API_URL = "http://192.168.1.4:3000/api";
 
+  const sendOtp = async () => {
+    const phoneWithCountryCode = `${countryCode.dial_code}${phoneNumber}`;
+    setLoading(true);
+
+    const response = await fetch(`${API_URL}/send-otp`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phoneNumber: phoneWithCountryCode }),
+    });
+
+    const data = await response.json();
+    setLoading(false);
+
+    if (data.success) {
+      setStep(2);
+      ToastAndroid.show("OTP sent to your phone!", ToastAndroid.SHORT);
+    } else {
+      ToastAndroid.show(data.error || "Failed to send OTP", ToastAndroid.SHORT);
+    }
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -84,7 +109,7 @@ export default function LoginScreen() {
                   <View style={styles.phoneInputRow}>
                     {/* Country Selector */}
                     <View style={styles.phoneInputRow}>
-                      <PhoneInput />
+                      <PhoneInput onSelect={setCountryCode} />
                     </View>
 
                     {/* Phone Number Input */}
@@ -134,6 +159,7 @@ export default function LoginScreen() {
                   styles.continueButton,
                   phoneNumber.trim().length > 0 && styles.activeContinueButton,
                 ]}
+                onPress={sendOtp}
                 activeOpacity={0.8}
               >
                 <Text

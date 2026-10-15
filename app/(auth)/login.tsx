@@ -68,112 +68,127 @@ export default function LoginScreen() {
               <Ionicons name="ellipsis-horizontal" size={20} color="#1A1A1A" />
             </TouchableOpacity>
           </View>
-          <View style={styles.mainSection}>
-            {/* Main Title & Subtitle */}
-            <View style={styles.titleSection}>
-              <Text style={styles.title}>Let’s join with us</Text>
-              <Text style={styles.subtitle}>
-                Enter your phone number/social{"\n"}account to get started.
-              </Text>
-            </View>
-
-            {/* Tab Switcher (Phone, Email, Social) */}
-            <View style={styles.tabContainer}>
-              {(["Phone", "Email", "Social"] as const).map((tab) => {
-                const isActive = selectedTab === tab;
-                return (
-                  <TouchableOpacity
-                    key={tab}
-                    style={[
-                      styles.tabButton,
-                      isActive && styles.activeTabButton,
-                    ]}
-                    onPress={() => setSelectedTab(tab)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[styles.tabText, isActive && styles.activeTabText]}
-                    >
-                      {tab}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Tab Content Section */}
-            <View style={styles.contentSection}>
-              {selectedTab === "Phone" && (
-                <View>
-                  <Text style={styles.fieldLabel}>Phone number</Text>
-                  <View style={styles.phoneInputRow}>
-                    {/* Country Selector */}
-                    <View style={styles.phoneInputRow}>
-                      <PhoneInput onSelect={setCountryCode} />
-                    </View>
-
-                    {/* Phone Number Input */}
-                    <View style={styles.numberInputContainer}>
-                      <TextInput
-                        style={styles.numberInput}
-                        placeholder="8123 3456 6789"
-                        placeholderTextColor="#C4C4C6"
-                        keyboardType="phone-pad"
-                        value={phoneNumber}
-                        maxLength={10}
-                        onChangeText={setPhoneNumber}
-                      />
-                    </View>
-                  </View>
-                </View>
-              )}
-
-              {selectedTab === "Email" && (
-                <View>
-                  <Text style={styles.fieldLabel}>Email address</Text>
-                  <View style={styles.numberInputContainer}>
-                    <TextInput
-                      style={styles.numberInput}
-                      placeholder="example@mail.com"
-                      placeholderTextColor="#C4C4C6"
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                    />
-                  </View>
-                </View>
-              )}
-
-              {selectedTab === "Social" && (
-                <View style={{ alignItems: "center", paddingTop: 20 }}>
-                  <Text style={{ color: "#8E8E93" }}>
-                    Social Login Options Here
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Bottom Continue Button */}
-            <View style={styles.bottomSection}>
-              <TouchableOpacity
-                style={[
-                  styles.continueButton,
-                  phoneNumber.trim().length > 0 && styles.activeContinueButton,
-                ]}
-                onPress={sendOtp}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.continueButtonText,
-                    phoneNumber.trim().length > 0 &&
-                      styles.activeContinueButtonText,
-                  ]}
-                >
-                  Continue
+          {step === 1 && (
+            <View style={styles.mainSection}>
+              {/* Main Title & Subtitle */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>Let’s join with us</Text>
+                <Text style={styles.subtitle}>
+                  Enter your phone number/social{"\n"}account to get started.
                 </Text>
-              </TouchableOpacity>
+              </View>
+
+              {/* Tab Content Section */}
+              <View style={styles.contentSection}>
+                {selectedTab === "Phone" && (
+                  <View>
+                    <Text style={styles.fieldLabel}>Phone number</Text>
+                    <View style={styles.phoneInputRow}>
+                      {/* Country Selector */}
+                      <View style={styles.phoneInputRow}>
+                        <PhoneInput onSelect={setCountryCode} />
+                      </View>
+
+                      {/* Phone Number Input */}
+                      <View style={styles.numberInputContainer}>
+                        <TextInput
+                          style={styles.numberInput}
+                          placeholder="8123 3456 6789"
+                          placeholderTextColor="#C4C4C6"
+                          keyboardType="phone-pad"
+                          value={phoneNumber}
+                          maxLength={10}
+                          onChangeText={setPhoneNumber}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Bottom Continue Button */}
+              <View style={styles.bottomSection}>
+                <TouchableOpacity
+                  style={[
+                    styles.continueButton,
+                    phoneNumber.trim().length > 0 &&
+                      styles.activeContinueButton,
+                  ]}
+                  onPress={sendOtp}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.continueButtonText,
+                      phoneNumber.trim().length > 0 &&
+                        styles.activeContinueButtonText,
+                    ]}
+                  >
+                    Continue
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          )}
+
+          {step === 2 && (
+            <View style={styles.mainSection}>
+              {/* Main Title & Subtitle */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>OTP Verification</Text>
+                <Text style={styles.subtitle}>
+                  Enter the OTP recieved on your mobile number
+                </Text>
+              </View>
+
+              {/* Tab Content Section */}
+              <View style={styles.contentSection}>
+                {selectedTab === "Phone" && (
+                  <View>
+                    <Text style={styles.fieldLabel}>OTP</Text>
+
+                    <View style={styles.phoneInputRow}>
+                      {/* Phone Number Input */}
+                      <View style={styles.numberInputContainer}>
+                        <TextInput
+                          style={styles.numberInput}
+                          placeholder="8123 3456 6789"
+                          placeholderTextColor="#C4C4C6"
+                          keyboardType="phone-pad"
+                          value={phoneNumber}
+                          maxLength={10}
+                          onChangeText={setPhoneNumber}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Bottom Continue Button */}
+              <View style={styles.bottomSection}>
+                <TouchableOpacity
+                  style={[
+                    styles.continueButton,
+                    phoneNumber.trim().length > 0 &&
+                      styles.activeContinueButton,
+                  ]}
+                  // onPress={}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.continueButtonText,
+                      phoneNumber.trim().length > 0 &&
+                        styles.activeContinueButtonText,
+                    ]}
+                  >
+                    Continue
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </SafeAreaView>

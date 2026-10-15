@@ -1,8 +1,11 @@
+import OTPInput from "@/components/OTPInput";
 import PhoneInput from "@/components/PhoneInput";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -25,11 +28,13 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState(1);
+  const [completePhone, setCompletePhone] = useState("");
   const API_URL = "http://192.168.1.4:3000/api";
 
   const sendOtp = async () => {
     const phoneWithCountryCode = `${countryCode.dial_code}${phoneNumber}`;
     setLoading(true);
+    setCompletePhone(`${countryCode.dial_code}-${phoneNumber}`);
 
     const response = await fetch(`${API_URL}/send-otp`, {
       method: "POST",
@@ -47,6 +52,40 @@ export default function LoginScreen() {
       ToastAndroid.show(data.error || "Failed to send OTP", ToastAndroid.SHORT);
     }
   };
+
+  const verifyOtp = async () => {
+    if (!otpCode || otpCode.length < 6) {
+      Alert.alert("Error", "Please enter the complete 6-digit code");
+      return;
+    }
+
+    const phoneWithCountryCode = `${countryCode.dial_code}${phoneNumber}`;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: phoneWithCountryCode,
+          code: otpCode,
+        }),
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (data.success) {
+        Alert.alert("Success!", "Phone number authenticated successfully!");
+      } else {
+        Alert.alert("Verification Failed", data.message || "Invalid code");
+      }
+    } catch (error) {
+      console.log("Error");
+      setLoading(false);
+      Alert.alert("Network Error", "Could not connect to the server.");
+    }
+  };
   return (
     <SafeAreaView style={styles.safeArea}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -57,7 +96,7 @@ export default function LoginScreen() {
           {/* Top Bar Navigation */}
           <View style={styles.header}>
             <TouchableOpacity
-              onPress={() => router.push("/landing")}
+              onPress={() => router.push("/auth/(tabs)/landing")}
               style={styles.circleButton}
               activeOpacity={0.7}
             >
@@ -116,16 +155,21 @@ export default function LoginScreen() {
                   ]}
                   onPress={sendOtp}
                   activeOpacity={0.8}
+                  disabled={loading || phoneNumber.trim().length === 0} // Disable while loading or empty
                 >
-                  <Text
-                    style={[
-                      styles.continueButtonText,
-                      phoneNumber.trim().length > 0 &&
-                        styles.activeContinueButtonText,
-                    ]}
-                  >
-                    Continue
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.continueButtonText,
+                        phoneNumber.trim().length > 0 &&
+                          styles.activeContinueButtonText,
+                      ]}
+                    >
+                      Continue
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -135,9 +179,9 @@ export default function LoginScreen() {
             <View style={styles.mainSection}>
               {/* Main Title & Subtitle */}
               <View style={styles.titleSection}>
-                <Text style={styles.title}>OTP Verification</Text>
+                <Text style={styles.title}>Enter OTP Code</Text>
                 <Text style={styles.subtitle}>
-                  Enter the OTP recieved on your mobile number
+                  Enter the 6-digit code sent to {completePhone}.
                 </Text>
               </View>
 
@@ -145,22 +189,11 @@ export default function LoginScreen() {
               <View style={styles.contentSection}>
                 {selectedTab === "Phone" && (
                   <View>
-                    <Text style={styles.fieldLabel}>OTP</Text>
-
-                    <View style={styles.phoneInputRow}>
-                      {/* Phone Number Input */}
-                      <View style={styles.numberInputContainer}>
-                        <TextInput
-                          style={styles.numberInput}
-                          placeholder="8123 3456 6789"
-                          placeholderTextColor="#C4C4C6"
-                          keyboardType="phone-pad"
-                          value={phoneNumber}
-                          maxLength={10}
-                          onChangeText={setPhoneNumber}
-                        />
-                      </View>
-                    </View>
+                    <OTPInput
+                      value={otpCode}
+                      onChange={setOtpCode}
+                      onResend={sendOtp}
+                    />
                   </View>
                 )}
               </View>
@@ -173,18 +206,22 @@ export default function LoginScreen() {
                     phoneNumber.trim().length > 0 &&
                       styles.activeContinueButton,
                   ]}
-                  // onPress={}
+                  onPress={verifyOtp}
                   activeOpacity={0.8}
                 >
-                  <Text
-                    style={[
-                      styles.continueButtonText,
-                      phoneNumber.trim().length > 0 &&
-                        styles.activeContinueButtonText,
-                    ]}
-                  >
-                    Continue
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.continueButtonText,
+                        phoneNumber.trim().length > 0 &&
+                          styles.activeContinueButtonText,
+                      ]}
+                    >
+                      Continue
+                    </Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -230,7 +267,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontWeight: "700",
+    fontWeight: "600",
     color: "#1A1A1A",
     marginBottom: 8,
     textAlign: "center",

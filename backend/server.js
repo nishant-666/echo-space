@@ -4,6 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const twilio = require("twilio");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
@@ -54,10 +55,19 @@ app.post("/api/verify-otp", async (req, res) => {
       .verificationChecks.create({ to: phoneNumber, code });
 
     if (verificationCheck.status === "approved") {
-      // Here you can generate a JWT token for user session
+      // 1. Generate a unique JWT token for the user session
+      // (Make sure to set JWT_SECRET in your environment variables, e.g., .env file)
+      const token = jwt.sign(
+        { phoneNumber: phoneNumber },
+        process.env.JWT_SECRET || "YOUR_SUPER_SECRET_KEY",
+        { expiresIn: "30d" }, // Token expires in 30 days (adjust as needed)
+      );
+
+      // 2. Return the token in the success response
       res.json({
         success: true,
         message: "Phone number verified successfully!",
+        token: token, // <--- Sent to frontend
       });
     } else {
       res
@@ -69,7 +79,6 @@ app.post("/api/verify-otp", async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Auth server running on port ${PORT}`);

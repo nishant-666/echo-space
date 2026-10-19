@@ -1,6 +1,7 @@
 import OTPInput from "@/components/OTPInput";
 import PhoneInput from "@/components/PhoneInput";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -18,7 +19,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 export default function LoginScreen() {
   const [selectedTab, setSelectedTab] = useState<"Phone" | "Email" | "Social">(
     "Phone",
@@ -76,6 +76,22 @@ export default function LoginScreen() {
       setLoading(false);
 
       if (data.success) {
+        const token = data.token;
+
+        if (token) {
+          // Store the token in AsyncStorage for one-time login persistence
+          await AsyncStorage.setItem("userToken", token);
+
+          Alert.alert("Success!", "Phone number authenticated successfully!");
+
+          // TODO: Update your app state or navigate to your home screen here
+          // e.g., setIsLoggedIn(true) or navigation.replace("Home");
+        } else {
+          Alert.alert(
+            "Error",
+            "Authentication token missing from server response.",
+          );
+        }
         Alert.alert("Success!", "Phone number authenticated successfully!");
       } else {
         Alert.alert("Verification Failed", data.message || "Invalid code");
@@ -86,6 +102,7 @@ export default function LoginScreen() {
       Alert.alert("Network Error", "Could not connect to the server.");
     }
   };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

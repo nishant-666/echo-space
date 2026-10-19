@@ -36,16 +36,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="contacts"
+        name="contact"
         options={{
-          title: "Contacts",
+          title: "Contact",
           tabBarButton: () => (
             <TouchableOpacity
               style={styles.centerButtonContainer}
               activeOpacity={0.8}
               onPress={() => {
                 // Navigate to your new chat / compose screen
-                router.push("/contacts");
+                router.push("/contact");
               }}
             >
               <View style={styles.centerButton}>

@@ -2,7 +2,6 @@ import { Text, View } from "@/components/Themed";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import { Tabs, useRouter } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import { StyleSheet, TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
@@ -18,7 +17,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#e5e5ea",
-          height: 100,
+          height: 120,
           margin: 5,
         },
       }}
@@ -28,7 +27,7 @@ export default function TabLayout() {
         options={{
           title: "Chats",
           tabBarIconStyle: {
-            marginTop: 10,
+            marginTop: 15,
           },
           tabBarIcon: ({ color }) => (
             <Feather name="home" size={24} color={color} tintColor={color} />
@@ -61,17 +60,14 @@ export default function TabLayout() {
         options={{
           title: "Settings",
           tabBarIconStyle: {
-            marginTop: 10,
+            marginTop: 15,
           },
           tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: "car.side.rear.crop.trunk.partition.fill",
-                android: "settings",
-                web: "settings",
-              }}
+            <Feather
+              name="settings"
               tintColor={color}
               size={28}
+              color={color}
             />
           ),
         }}

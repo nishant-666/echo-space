@@ -14,7 +14,6 @@ export default function Index() {
         const token = await AsyncStorage.getItem("userToken");
 
         if (token) {
-          console.log(token, "token found");
           setIsLoggedIn(true);
         } else {
           console.log("No token found");

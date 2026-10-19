@@ -22,8 +22,7 @@ export default function ContactsScreen() {
 
       if (status === "granted") {
         setPermissionGranted(true);
-
-        // 2. Fetch all local phone contacts
+        // 2. Fetch contacts with images and phone numbers using the modern API
         const data = await Contact.getAllDetails([
           ContactField.FULL_NAME,
           ContactField.PHONES,
@@ -31,37 +30,10 @@ export default function ContactsScreen() {
         ]);
 
         if (data.length > 0) {
-          try {
-            // 3. Extract phone numbers to send to your backend
-            // (Make sure to format/clean phone numbers as needed for your backend)
-            const phoneNumbers = data
-              .map((contact) => contact.phones?.[0]?.number)
-              .filter(Boolean);
-
-            // 4. Call your backend API to check which numbers have platform accounts
-            /* 
-            const response = await fetch("https://your-api.com/api/match-contacts", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ phoneNumbers }),
-            });
-            const registeredUsers = await response.json(); 
-            */
-
-            // --- SIMULATED BACKEND FILTER FOR DEMO PURPOSES ---
-            // Filtering only every alternate contact as if they have an account on the platform
-            const platformContacts = data.filter((_, index) => index % 2 === 0);
-            // ---------------------------------------------------
-
-            // 5. Sort the matched contacts alphabetically by fullName
-            const sortedData = platformContacts.sort((a, b) =>
-              (a.fullName || "").localeCompare(b.fullName || ""),
-            );
-
-            setContacts(sortedData);
-          } catch (error) {
-            console.error("Failed to sync contacts with backend:", error);
-          }
+          const sortedData = data.sort((a, b) =>
+            (a.fullName || "").localeCompare(b.fullName || ""),
+          );
+          setContacts(sortedData);
         }
       } else {
         setPermissionGranted(false);
@@ -92,7 +64,7 @@ export default function ContactsScreen() {
     <View style={styles.container}>
       {/* Fixed Header */}
       <View style={styles.chatsHeader}>
-        <Text style={styles.chatsTitle}>Platform Contacts</Text>
+        <Text style={styles.chatsTitle}>Contacts</Text>
         <TouchableOpacity style={styles.moreButton}>
           <Text style={styles.iconText}>•••</Text>
         </TouchableOpacity>
@@ -105,51 +77,40 @@ export default function ContactsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.chatList}>
-          {contacts.length === 0 ? (
-            <View style={styles.center}>
-              <Text style={styles.errorText}>
-                No contacts found on this platform.
-              </Text>
-            </View>
-          ) : (
-            contacts.map((contact, index) => {
-              const phoneNumber =
-                contact.phones?.[0]?.number || "No phone number";
-              const displayName = contact.fullName || "Unknown Contact";
-              const avatarUri =
-                contact.imageAvailable && contact.image?.uri
-                  ? contact.image.uri
-                  : `https://i.pravatar.cc/150?img=${(index % 70) + 1}`;
+          {contacts.map((contact, index) => {
+            const phoneNumber =
+              contact.phones?.[0]?.number || "No phone number";
+            const displayName = contact.fullName || "Unknown Contact";
+            const avatarUri =
+              contact.imageAvailable && contact.image?.uri
+                ? contact.image.uri
+                : `https://i.pravatar.cc/150?img=${(index % 70) + 1}`; // Dynamic avatar fallback
 
-              return (
-                <TouchableOpacity
-                  key={contact.id || index.toString()}
-                  style={styles.chatItem}
-                >
-                  <Image
-                    source={{ uri: avatarUri }}
-                    style={styles.chatAvatar}
-                  />
+            return (
+              <TouchableOpacity
+                key={contact.id || index.toString()}
+                style={styles.chatItem}
+              >
+                <Image source={{ uri: avatarUri }} style={styles.chatAvatar} />
 
-                  <View style={styles.chatInfo}>
-                    <View style={styles.chatInfoTop}>
-                      <Text style={styles.chatName} numberOfLines={1}>
-                        {displayName}
+                <View style={styles.chatInfo}>
+                  <View style={styles.chatInfoTop}>
+                    <Text style={styles.chatName} numberOfLines={1}>
+                      {displayName}
+                    </Text>
+                  </View>
+
+                  <View style={styles.chatInfoBottom}>
+                    <View style={styles.messageRow}>
+                      <Text style={styles.chatMessage} numberOfLines={1}>
+                        {phoneNumber}
                       </Text>
                     </View>
-
-                    <View style={styles.chatInfoBottom}>
-                      <View style={styles.messageRow}>
-                        <Text style={styles.chatMessage} numberOfLines={1}>
-                          {phoneNumber}
-                        </Text>
-                      </View>
-                    </View>
                   </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
     </View>
@@ -159,7 +120,7 @@ export default function ContactsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF", // Forced pure white background
     paddingTop: 50,
   },
   scrollView: {
@@ -168,7 +129,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     backgroundColor: "#FFFFFF",
     paddingBottom: 24,
-    flexGrow: 1,
   },
   center: {
     justifyContent: "center",
@@ -188,7 +148,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 10,
     marginBottom: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#FFFFFF", // Keeps header solid white when items scroll underneath
     zIndex: 10,
   },
   chatsTitle: {
@@ -230,15 +190,48 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   chatName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "700",
     color: "#000000",
     flex: 1,
     marginRight: 8,
   },
+  chatTime: {
+    fontSize: 12,
+    color: "#8E8E93",
+  },
+  chatInfoBottom: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  messageRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    marginRight: 8,
+  },
+  checkMark: {
+    fontSize: 12,
+    color: "#8E8E93",
+    fontWeight: "bold",
+  },
   chatMessage: {
     fontSize: 14,
     color: "#8E8E93",
     flex: 1,
+  },
+  unreadBadge: {
+    backgroundColor: "#F2C94C",
+    borderRadius: 11,
+    width: 22,
+    height: 22,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unreadText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#000000",
   },
 });

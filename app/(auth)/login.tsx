@@ -25,6 +25,7 @@ export default function LoginScreen() {
   );
   const [countryCode, setCountryCode] = useState({ dial_code: "" });
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState(1);
@@ -81,7 +82,7 @@ export default function LoginScreen() {
         if (token) {
           // Store the token in AsyncStorage for one-time login persistence
           await AsyncStorage.setItem("userToken", token);
-
+          setStep(3);
           Alert.alert("Success!", "Phone number authenticated successfully!");
 
           // TODO: Update your app state or navigate to your home screen here
@@ -100,6 +101,25 @@ export default function LoginScreen() {
       console.log("Error");
       setLoading(false);
       Alert.alert("Network Error", "Could not connect to the server.");
+    }
+  };
+
+  const updateName = async () => {
+    router.replace("/(tabs)/chats");
+    const phoneWithCountryCode = `${countryCode.dial_code}${phoneNumber}`;
+
+    try {
+      await fetch(`${API_URL}/update-name`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumber: phoneWithCountryCode,
+          userName: userName,
+        }),
+      });
+    } catch (err) {
+      setLoading(false);
+      Alert.alert("Network Error", "Could not update the user name");
     }
   };
 
@@ -225,6 +245,64 @@ export default function LoginScreen() {
                   ]}
                   onPress={verifyOtp}
                   activeOpacity={0.8}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text
+                      style={[
+                        styles.continueButtonText,
+                        phoneNumber.trim().length > 0 &&
+                          styles.activeContinueButtonText,
+                      ]}
+                    >
+                      Continue
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+          {step === 3 && (
+            <View style={styles.mainSection}>
+              {/* Main Title & Subtitle */}
+              <View style={styles.titleSection}>
+                <Text style={styles.title}>Enter your Name</Text>
+              </View>
+
+              {/* Tab Content Section */}
+              <View style={styles.contentSection}>
+                {selectedTab === "Phone" && (
+                  <View>
+                    <View style={styles.phoneInputRow}>
+                      {/* Country Selector */}
+
+                      {/* Phone Number Input */}
+                      <View style={styles.numberInputContainer}>
+                        <TextInput
+                          style={styles.numberInput}
+                          placeholder="Your name here.."
+                          placeholderTextColor="#C4C4C6"
+                          keyboardType="name-phone-pad"
+                          value={userName}
+                          onChangeText={setUserName}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {/* Bottom Continue Button */}
+              <View style={styles.bottomSection}>
+                <TouchableOpacity
+                  style={[
+                    styles.continueButton,
+                    userName.trim().length > 0 && styles.activeContinueButton,
+                  ]}
+                  onPress={updateName}
+                  activeOpacity={0.8}
+                  disabled={loading || userName.trim().length === 0} // Disable while loading or empty
                 >
                   {loading ? (
                     <ActivityIndicator color="#FFFFFF" size="small" />

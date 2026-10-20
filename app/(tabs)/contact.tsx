@@ -15,30 +15,67 @@ export default function ContactsScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
 
+  const API_URL = "http://192.168.1.4:3000/api";
+
   useEffect(() => {
     (async () => {
-      // 1. Request contact permissions
-      const { status } = await requestPermissionsAsync();
+      try {
+        // 1. Request contact permissions
+        const { status } = await requestPermissionsAsync();
 
-      if (status === "granted") {
-        setPermissionGranted(true);
-        // 2. Fetch contacts with images and phone numbers using the modern API
-        const data = await Contact.getAllDetails([
-          ContactField.FULL_NAME,
-          ContactField.PHONES,
-          ContactField.IMAGE,
-        ]);
+        if (status === "granted") {
+          setPermissionGranted(true);
 
-        if (data.length > 0) {
-          const sortedData = data.sort((a, b) =>
-            (a.fullName || "").localeCompare(b.fullName || ""),
-          );
-          setContacts(sortedData);
+          // 2. Fetch all local device contacts
+          const localContacts = await Contact.getAllDetails([
+            ContactField.FULL_NAME,
+            ContactField.PHONES,
+            ContactField.IMAGE,
+          ]);
+
+          if (localContacts.length > 0) {
+            // 3. Extract all phone numbers from local contacts
+            const phoneNumbers: string[] = [];
+            localContacts.forEach((contact) => {
+              if (contact.phones) {
+                contact.phones.forEach((phone) => {
+                  if (phone.number) {
+                    phoneNumbers.push(phone.number);
+                  }
+                });
+              }
+            });
+
+            // 4. Send phone numbers to your backend API to match with DB users
+            // Replace with your actual backend URL (e.g., "https://your-api.com/api/match-contacts" or local IP for dev)
+            const response = await fetch(`${API_URL}/match-contacts`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                // Include authorization token here if your route requires authentication:
+                // "Authorization": `Bearer ${token}`
+              },
+              body: JSON.stringify({ phoneNumbers }),
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.contacts) {
+              // Sort matched contacts alphabetically
+              const sortedData = result.contacts.sort((a: any, b: any) =>
+                (a.fullName || "").localeCompare(b.fullName || ""),
+              );
+              setContacts(sortedData);
+            }
+          }
+        } else {
+          setPermissionGranted(false);
         }
-      } else {
-        setPermissionGranted(false);
+      } catch (error) {
+        console.warn("Error matching contacts:", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
 
@@ -64,7 +101,7 @@ export default function ContactsScreen() {
     <View style={styles.container}>
       {/* Fixed Header */}
       <View style={styles.chatsHeader}>
-        <Text style={styles.chatsTitle}>Contacts</Text>
+        <Text style={styles.chatsTitle}>Contacts on App</Text>
         <TouchableOpacity style={styles.moreButton}>
           <Text style={styles.iconText}>•••</Text>
         </TouchableOpacity>
@@ -77,40 +114,51 @@ export default function ContactsScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.chatList}>
-          {contacts.map((contact, index) => {
-            const phoneNumber =
-              contact.phones?.[0]?.number || "No phone number";
-            const displayName = contact.fullName || "Unknown Contact";
-            const avatarUri =
-              contact.imageAvailable && contact.image?.uri
-                ? contact.image.uri
-                : `https://i.pravatar.cc/150?img=${(index % 70) + 1}`; // Dynamic avatar fallback
+          {contacts.length === 0 ? (
+            <View style={styles.center}>
+              <Text style={styles.errorText}>
+                No contacts found on the app.
+              </Text>
+            </View>
+          ) : (
+            contacts.map((contact, index) => {
+              const phoneNumber =
+                contact.phones?.[0]?.number || "No phone number";
+              const displayName = contact.fullName || "Unknown Contact";
+              const avatarUri =
+                contact.image?.uri && contact.image.uri !== ""
+                  ? contact.image.uri
+                  : `https://i.pravatar.cc/150?img=${(index % 70) + 1}`; // Dynamic fallback avatar
 
-            return (
-              <TouchableOpacity
-                key={contact.id || index.toString()}
-                style={styles.chatItem}
-              >
-                <Image source={{ uri: avatarUri }} style={styles.chatAvatar} />
+              return (
+                <TouchableOpacity
+                  key={contact.id || index.toString()}
+                  style={styles.chatItem}
+                >
+                  <Image
+                    source={{ uri: avatarUri }}
+                    style={styles.chatAvatar}
+                  />
 
-                <View style={styles.chatInfo}>
-                  <View style={styles.chatInfoTop}>
-                    <Text style={styles.chatName} numberOfLines={1}>
-                      {displayName}
-                    </Text>
-                  </View>
-
-                  <View style={styles.chatInfoBottom}>
-                    <View style={styles.messageRow}>
-                      <Text style={styles.chatMessage} numberOfLines={1}>
-                        {phoneNumber}
+                  <View style={styles.chatInfo}>
+                    <View style={styles.chatInfoTop}>
+                      <Text style={styles.chatName} numberOfLines={1}>
+                        {displayName}
                       </Text>
                     </View>
+
+                    <View style={styles.chatInfoBottom}>
+                      <View style={styles.messageRow}>
+                        <Text style={styles.chatMessage} numberOfLines={1}>
+                          {phoneNumber}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </View>
       </ScrollView>
     </View>
@@ -120,7 +168,7 @@ export default function ContactsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF", // Forced pure white background
+    backgroundColor: "#FFFFFF",
     paddingTop: 50,
   },
   scrollView: {
@@ -148,7 +196,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 10,
     marginBottom: 16,
-    backgroundColor: "#FFFFFF", // Keeps header solid white when items scroll underneath
+    backgroundColor: "#FFFFFF",
     zIndex: 10,
   },
   chatsTitle: {
@@ -196,10 +244,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  chatTime: {
-    fontSize: 12,
-    color: "#8E8E93",
-  },
   chatInfoBottom: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -211,27 +255,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  checkMark: {
-    fontSize: 12,
-    color: "#8E8E93",
-    fontWeight: "bold",
-  },
   chatMessage: {
     fontSize: 14,
     color: "#8E8E93",
     flex: 1,
-  },
-  unreadBadge: {
-    backgroundColor: "#F2C94C",
-    borderRadius: 11,
-    width: 22,
-    height: 22,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  unreadText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#000000",
   },
 });
